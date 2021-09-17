@@ -1,13 +1,26 @@
 import numpy as np
-from heapq import heappush, heappop
+from heapq import heappush, heappushpop
 
 
 class KNearestNeighbor:
 
+    class Node:
+
+        def __init__(self, point, dim):
+            self.left = None
+            self.right = None
+            self.point = point
+            self.dim = dim
+
     # Inicialize KNN
     def __init__(self, neighbors=1, policy='BruFor'):
         self.neighbors = neighbors
-        if policy == 'BruFor' or policy == 'KDTree':
+        if policy == 'KDTree':
+            if neighbors != 1:
+                print(f'KDTree policy only suports 1 nearest neighbor!')
+                self.neighbors = 1 
+            self.policy = policy
+        elif policy == 'BruFor':
             self.policy = policy
         else:
             print(f'invalid policy: {policy}, \'BruFor\' policy set by default')
@@ -16,9 +29,43 @@ class KNearestNeighbor:
      
     # Train the model
     def fit(self, X, y):
-        self.values = X
-        self.classes = y
+        if self.policy == 'BruFor':
+            self.values = X
+            self.classes = y
+        else:
+            print('KDTree not implemented!')
+            self.root = self.build_tree(np.array(X), 0)
+            self.print_tree(self.root)
 
+            
+
+    def build_tree(self, array, dim):
+        # sort array by dim
+        array = array[array[:, dim].argsort()]
+
+        #split array in 2
+        splited_array = np.array_split(array, 2)
+        
+        # Get this node value
+        this = splited_array[0][-1]
+        splited_array[0] = splited_array[0][:-1]
+        node = self.Node(this, dim)
+
+        # build next steps of tree
+        if len(splited_array[0]):
+            node.left = self.build_tree(splited_array[0], (dim + 1) % len(this))
+        if len(splited_array[1]):
+            node.right = self.build_tree(splited_array[1], (dim + 1) % len(this))
+
+        return node
+        
+    
+    def print_tree(self, node, level=0):
+        if node:
+            self.print_tree(node.left, level+1)
+            print(" " * 20 * level + '->', f'{node.point}')
+            self.print_tree(node.right, level+1)
+    
 
     # predict the values
     def predict(self, X):
@@ -49,7 +96,7 @@ class KNearestNeighbor:
 
     # KDTree policy predict
     def KDTree_pred(self, X):
-        pass
+        print('KDTree Pred not implemented!')
 
 
     def insert_distance_queue(self, nearests, dist, neghbor):
@@ -57,8 +104,7 @@ class KNearestNeighbor:
             heappush(nearests, (dist * -1, neghbor))
         else:
             if dist < abs(nearests[0][0]):
-                heappop(nearests)
-                heappush(nearests, (dist * -1, neghbor))
+                heappushpop(nearests, (dist * -1, neghbor))
         
 
     def distance(self, a, b):
