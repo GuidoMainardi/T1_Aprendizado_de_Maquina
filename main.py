@@ -10,9 +10,14 @@ X_train = train.values[:,:2]
 y_train = train.values[:,2:]
 X_test = test.values
 
-knn = KNearestNeighbor(neighbors=7, policy='KDTree')
+brute_force = KNearestNeighbor(neighbors=1)
+KDTree = KNearestNeighbor(neighbors=1, policy='KDTree')
 
-knn.fit(X_train, y_train)
+brute_force.fit(X_train, y_train)
+KDTree.fit(X_train, y_train)
+
+print(brute_force.predict(X_test))
+print(KDTree.predict(X_test))
 
 # pred = knn.predict(X_test)
 

@@ -1,7 +1,6 @@
 import numpy as np
 from heapq import heappush, heappushpop
 
-
 class KNearestNeighbor:
 
     class Node:
@@ -30,12 +29,14 @@ class KNearestNeighbor:
     # Train the model
     def fit(self, X, y):
         if self.policy == 'BruFor':
-            self.values = X
-            self.classes = y
+            self.values = np.array(X)
+            self.classes = np.array(y)
+            print('Brute Force model Fitted!')
         else:
-            print('KDTree not implemented!')
-            self.root = self.build_tree(np.array(X), 0)
-            self.print_tree(self.root)
+            array = np.c_[np.array(X), np.array(y)]
+            self.root = self.build_tree(array, 0)
+            #self.print_tree(self.root)
+            print('KDTree builded!')
 
             
 
@@ -45,7 +46,7 @@ class KNearestNeighbor:
 
         #split array in 2
         splited_array = np.array_split(array, 2)
-        
+
         # Get this node value
         this = splited_array[0][-1]
         splited_array[0] = splited_array[0][:-1]
@@ -53,9 +54,9 @@ class KNearestNeighbor:
 
         # build next steps of tree
         if len(splited_array[0]):
-            node.left = self.build_tree(splited_array[0], (dim + 1) % len(this))
+            node.left = self.build_tree(splited_array[0], (dim + 1) % (len(this) - 1))
         if len(splited_array[1]):
-            node.right = self.build_tree(splited_array[1], (dim + 1) % len(this))
+            node.right = self.build_tree(splited_array[1], (dim + 1) % (len(this) - 1))
 
         return node
         
@@ -93,10 +94,39 @@ class KNearestNeighbor:
             predicted_classes.append(self.mode(neighbors_classes))
         return predicted_classes
     
+    def closer(self, point, p1, p2):
+        if p1 is None:
+            return p2
+        elif p2 is None:
+            return p1
 
-    # KDTree policy predict
+        return p1 if self.distance(p1[:-1], point) < self.distance(p2[:-1], point) else p2
+    
     def KDTree_pred(self, X):
-        print('KDTree Pred not implemented!')
+        predicted_classes = []
+        for point in X:
+            predicted_classes.append(self.KDTree(self.root, point)[-1])
+        return predicted_classes
+    
+    # KDTree policy predict
+    def KDTree(self, root, point):
+        if not root:
+            return None
+        
+        if point[root.dim] < root.point[root.dim]:
+            nearest = self.closer(point, self.KDTree(root.left, point), root.point)
+            
+
+            if self.distance(point, nearest[:-1]) > abs(point[root.dim] - root.point[root.dim]):
+                nearest = self.closer(point, self.KDTree(root.right, point), nearest)
+
+        else:
+            nearest = self.closer(point, self.KDTree(root.right, point), root.point)
+
+            if self.distance(point, nearest[:-1]) > abs(point[root.dim] - root.point[root.dim]):
+                nearest = self.closer(point, self.KDTree(root.left, point), nearest)
+
+        return nearest
 
 
     def insert_distance_queue(self, nearests, dist, neghbor):
