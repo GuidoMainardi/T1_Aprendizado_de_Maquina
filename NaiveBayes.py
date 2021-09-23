@@ -8,15 +8,17 @@ class NaiveBayes:
 
     
     def fit(self, X, y):
-        self.y = y
+        self.y = np.array(y)
+
         # calculate inicial classes probability
         unique, counts = np.unique(np.array(y), return_counts=True)
         self.classes = list(zip(unique, counts / len(y)))
         self.class_prob = list(map(lambda x: x[1], self.classes))
         #print(self.class_prob)
+
         # split dataset by class
         X = np.c_[np.array(X), np.array(y)]
-        self.data_by_class = np.array([X[X[:,-1]==k] for k in np.unique(X[:,-1])])
+        self.data_by_class = np.array([X[X[:,-1]==k] for k in np.unique(X[:,-1])], dtype=object)
         #print(self.data_by_class)
 
         # calculate the mean and the standard deviation for each feature in each class
@@ -24,12 +26,15 @@ class NaiveBayes:
         #[print(x) for x in self.mean_std]
     
     def likelihood(self, mean, std, value):
-        first_part = 1 / (sqrt(2*pi*(std**2)))
+        if std:
+            first_part = 1 / (sqrt(2*pi*(std**2)))
+        else:
+            return self.alpha
         second_part = exp((-((value-mean)**2))/(2*(std**2)))
         return first_part * second_part  + self.alpha
 
     def pred_class(self, point):
-
+        #calculate prob of each class
         probs = []
         for feature in range(len(self.mean_std)):
             prob = log(self.classes[feature][1])
@@ -37,6 +42,7 @@ class NaiveBayes:
                 prob += log(self.likelihood(self.mean_std[feature][index][0], self.mean_std[feature][index][1], point[index]))
             probs.append(prob)
 
+        #return class with higher prob
         return self.classes[probs.index(max(probs))][0]
 
 

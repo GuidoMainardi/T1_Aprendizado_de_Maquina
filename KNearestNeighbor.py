@@ -31,12 +31,12 @@ class KNearestNeighbor:
         if self.policy == 'BruFor':
             self.values = np.array(X)
             self.classes = np.array(y)
-            print('Brute Force model Fitted!')
+            #print('Brute Force model Fitted!')
         else:
             array = np.c_[np.array(X), np.array(y)]
             self.root = self.build_tree(array, 0)
             #self.print_tree(self.root)
-            print('KDTree builded!')
+            #print('KDTree builded!')
 
             
 
@@ -90,7 +90,7 @@ class KNearestNeighbor:
             for i in range(len(self.values)):
                 dist = self.distance(point, self.values[i])
                 self.insert_distance_queue(nearests, dist, i)
-            neighbors_classes = [self.classes[i] for i in [x[1] for x in nearests]]
+            neighbors_classes = [self.classes[j] for j in [x[1] for x in nearests]]
             predicted_classes.append(self.mode(neighbors_classes))
         return predicted_classes
     
